@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Contains page_api.module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function page_api_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the page_api module.
+    case 'help.page.page_api':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('My Awesome Module') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ */
+function page_api_form_system_site_information_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $site_config = \Drupal::config('system.site');
+  $form['site_api_details'] = [
+    '#type' => 'details',
+    '#title' => t('Site API Key'),
+    '#open' => TRUE,
+  ];
+  $form['site_api_details']['siteapikey'] = [
+    '#type' => 'textfield',
+    '#title' => t('Site API key'),
+    '#default_value' => !empty($site_config->get('siteapikey')) ? $site_config->get('siteapikey') : t('No API key yet'),
+    '#required' => TRUE,
+  ];
+  $form['actions']['submit']['#submit'][]  = 'page_api_custom_submit_handler';
+  $form['actions']['submit']['#value']  = !empty($site_config->get('siteapikey')) ? t('Update Configuration') :  $form['actions']['submit']['#value'];
+  return $form;
+}
+
+function page_api_custom_submit_handler(&$form, FormStateInterface $form_state) {
+  $site_config = \Drupal::configFactory()->getEditable('system.site');
+  $site_config->set('siteapikey', $form_state->getValue('siteapikey'))
+      ->save();
+  drupal_set_message("Site API has been with this the value " . $form_state->getValue('siteapikey'));
+}
